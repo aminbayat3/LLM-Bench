@@ -30,12 +30,16 @@ Metrics are exported to **Prometheus** and visualized in **Grafana**, enabling *
 ## 📖 Project Explanation
 The full project explanation is available here:
 
-👉 [Google Doc Project Report](https://docs.google.com/document/d/11S64ulDxScZ3bRxEUnB0KBwKIzfxGb6Q2nFHGBKn3X0/edit?usp=sharing)
+👉 [Google Doc Project Explanation](https://docs.google.com/document/d/11S64ulDxScZ3bRxEUnB0KBwKIzfxGb6Q2nFHGBKn3X0/edit?usp=sharing)
 
 ## 📖 Project Set-Up
 The full project Set-up, including the steps and commands, is available here:
 
-👉 [Google Doc Project Report](https://docs.google.com/document/d/1FEU8dvlqnXkjhR4g67AVjAECOp7trhGhcI28hmP1Gsc/edit?usp=sharing)
+👉 [Google Doc Project Report Production Set-Up (GKE Standard)](https://docs.google.com/document/d/1m6OE4F5If7MY9WIQyUOuBooQ4LAjLGnb4gFa1V3fu_g/edit?usp=sharing)
+
+👉 [Google Doc Project Report Local Set-Up (Minikube)](https://docs.google.com/document/d/1q4bytgs0u2ekm78C5eSSyBwFT_mKFwyn2y8HwxeWOow/edit?usp=sharing)
+
+**The local setup was intended solely for testing prior to production deployment.**
 
 ---
 
