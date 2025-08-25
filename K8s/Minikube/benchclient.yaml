@@ -17,27 +17,27 @@ spec:
     metadata:
       labels:
         app: benchclient
-      annotations:                   # <-- Add these
+      annotations:                   
         prometheus.io/scrape: "true"
         prometheus.io/port: "8080"
         prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: benchclient
-          image: benchclient:latest   # built inside minikube's Docker
-          imagePullPolicy: Never      # keep this for minikube (so it uses local build)
+          image: benchclient:latest   
+          imagePullPolicy: Never      
           ports:
             - containerPort: 8080
           env:
             - name: PORT
               value: "8080"
             - name: OLLAMA_BASE
-              value: "http://ollama:11434"  # service name in same ns
+              value: "http://ollama:11434"  
             - name: RUNTIME_LABEL
               value: "ollama"
             - name: TEST_ENV_LABEL
               value: "in-cluster"
-          resources:                   # tiny footprint to avoid contention
+          resources:                   
             requests:
               cpu: "50m"
               memory: "128Mi"
@@ -54,6 +54,6 @@ spec:
   selector:
     app: benchclient
   ports:
-    - name: http                    # give the port a name (good practice)
+    - name: http                    
       port: 8080
       targetPort: 8080

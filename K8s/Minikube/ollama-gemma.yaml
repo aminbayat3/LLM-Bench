@@ -46,7 +46,7 @@ spec:
             periodSeconds: 5
       volumes:
         - name: ollama-data
-          emptyDir: {}   # Dev: ephemeral. GKE: replace with PVC
+          emptyDir: {}   
 ---
 apiVersion: v1
 kind: Service

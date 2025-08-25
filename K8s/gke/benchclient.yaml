@@ -48,7 +48,7 @@ spec:
             - name: PORT
               value: "8080"
             - name: OLLAMA_BASE
-              value: "http://ollama:11434"   # Service name in same namespace
+              value: "http://ollama:11434"   
             - name: RUNTIME_LABEL
               value: "ollama"
             - name: TEST_ENV_LABEL
