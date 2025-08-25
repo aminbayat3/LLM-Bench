@@ -1,0 +1,2 @@
+# LLM-Bench
+Benchmarking LLM inference with Ollama and Node.js client on Kubernetes (minikube for local, GKE Standard for cloud) with Prometheus monitoring. The ultimate goal is to build a repeatable benchmarking framework to test different LLM runtimes under load, capture key inference and resource metrics, and visualize comparisons in Grafana.
