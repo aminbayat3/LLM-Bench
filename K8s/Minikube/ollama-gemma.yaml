@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: llm-bench
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama-gemma
+  namespace: llm-bench
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ollama-gemma
+  template:
+    metadata:
+      labels:
+        app: ollama-gemma
+    spec:
+      containers:
+        - name: ollama
+          image: ollama/ollama:latest
+          args: ["serve"]
+          ports:
+            - containerPort: 11434
+          env:
+            - name: OLLAMA_NUM_PARALLEL
+              value: "1"
+            - name: OLLAMA_MAX_LOADED_MODELS
+              value: "1"
+          resources:
+            requests:
+              cpu: "1"
+              memory: "2Gi"
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+          volumeMounts:
+            - name: ollama-data
+              mountPath: /root/.ollama
+          readinessProbe:
+            tcpSocket:
+              port: 11434
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: ollama-data
+          emptyDir: {}   # Dev: ephemeral. GKE: replace with PVC
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama
+  namespace: llm-bench
+spec:
+  selector:
+    app: ollama-gemma
+  ports:
+    - name: api
+      port: 11434
+      targetPort: 11434
+  type: NodePort

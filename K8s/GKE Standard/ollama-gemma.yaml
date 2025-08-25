@@ -1,0 +1,142 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: llm-bench
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ollama-cache
+  namespace: llm-bench
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard-rwo
+  resources:
+    requests:
+      storage: 30Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama-gemma
+  namespace: llm-bench
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ollama-gemma
+  template:
+    metadata:
+      labels:
+        app: ollama-gemma
+    spec:
+      initContainers:
+        - name: warm-model
+          image: ollama/ollama:latest
+          command:
+            - sh
+            - -lc
+            - |
+              set -e
+              ollama serve &
+              sleep 5
+              ollama pull gemma:2b
+              pkill ollama || true
+          volumeMounts:
+            - name: ollama-data
+              mountPath: /root/.ollama
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "150m"
+              memory: "256Mi"
+
+      containers:
+        - name: ollama
+          image: ollama/ollama:latest
+          args: ["serve"]
+          ports:
+            - containerPort: 11434
+          env:
+            - name: OLLAMA_NUM_PARALLEL
+              value: "1"
+            - name: OLLAMA_MAX_LOADED_MODELS
+              value: "1"
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "1.5Gi"
+            limits:
+              cpu: "600m"
+              memory: "2Gi"
+          volumeMounts:
+            - name: ollama-data
+              mountPath: /root/.ollama
+          readinessProbe:
+            tcpSocket:
+              port: 11434
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: 11434
+            initialDelaySeconds: 15
+            periodSeconds: 10
+      volumes:
+        - name: ollama-data
+          persistentVolumeClaim:
+            claimName: ollama-cache
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama
+  namespace: llm-bench
+spec:
+  selector:
+    app: ollama-gemma
+  ports:
+    - name: api
+      port: 11434
+      targetPort: 11434
+  type: ClusterIP
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ollama-gemma-pdb
+  namespace: llm-bench
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: ollama-gemma
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-namespace-only
+  namespace: llm-bench
+spec:
+  podSelector:
+    matchLabels:
+      app: ollama-gemma
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: llm-bench
+      ports:
+        - port: 11434
+          protocol: TCP
+
+
+# NetworkPolicy (this policy will do the following)
+# benchclient (same namespace) → allowed to hit ollama ✅
+
+# Prometheus (in monitoring ns) → cannot hit ollama ❌

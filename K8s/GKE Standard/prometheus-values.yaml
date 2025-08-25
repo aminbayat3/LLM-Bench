@@ -1,0 +1,20 @@
+server:
+  nodeSelector:
+    role: tools
+  tolerations: []
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - ollama-gemma
+          topologyKey: "kubernetes.io/hostname"
+
+alertmanager:
+  enabled: false
+
+pushgateway:
+  enabled: false

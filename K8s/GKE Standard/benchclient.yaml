@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: llm-bench
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: benchclient
+  namespace: llm-bench
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: benchclient
+  template:
+    metadata:
+      labels:
+        app: benchclient
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      # Keep benchclient off the same node as the Ollama pod
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: ollama-gemma
+              topologyKey: kubernetes.io/hostname
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: role
+                    operator: In
+                    values:
+                      - tools
+      containers:
+        - name: benchclient
+          image: europe-west3-docker.pkg.dev/llm-bench-469412/llm-bench/benchclient:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: OLLAMA_BASE
+              value: "http://ollama:11434"   # Service name in same namespace
+            - name: RUNTIME_LABEL
+              value: "ollama"
+            - name: TEST_ENV_LABEL
+              value: "in-cluster"
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "100m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: benchclient
+  namespace: llm-bench
+spec:
+  selector:
+    app: benchclient
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP

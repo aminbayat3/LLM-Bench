@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: llm-bench
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: benchclient
+  namespace: llm-bench
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: benchclient
+  template:
+    metadata:
+      labels:
+        app: benchclient
+      annotations:                   # <-- Add these
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: benchclient
+          image: benchclient:latest   # built inside minikube's Docker
+          imagePullPolicy: Never      # keep this for minikube (so it uses local build)
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: OLLAMA_BASE
+              value: "http://ollama:11434"  # service name in same ns
+            - name: RUNTIME_LABEL
+              value: "ollama"
+            - name: TEST_ENV_LABEL
+              value: "in-cluster"
+          resources:                   # tiny footprint to avoid contention
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "100m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: benchclient
+  namespace: llm-bench
+spec:
+  selector:
+    app: benchclient
+  ports:
+    - name: http                    # give the port a name (good practice)
+      port: 8080
+      targetPort: 8080
