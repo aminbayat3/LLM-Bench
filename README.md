@@ -73,39 +73,6 @@ helm install prometheus prometheus-community/prometheus \
   -n monitoring --create-namespace \
   -f k8s/gke/prometheus-values.yaml
 ```
-
----
-
-## 🏗️ Architecture
-```mermaid
-flowchart TD
-    subgraph Cluster["Kubernetes Cluster - Minikube or GKE Standard"]
-        subgraph Runtime["LLM Runtime Deployment"]
-            A1["Ollama + Gemma"] 
-            A2["WASM Runtime + LLM"] 
-            A3["Containerized LLM Server"] 
-        end
-
-        subgraph Bench["Benchmark Client Deployment"]
-            B1["Node.js / Python Client"]
-            B1 -->|Sends prompts| Runtime
-            B1 -->|/metrics endpoint| Prom
-        end
-
-        subgraph Monitoring["Monitoring Stack"]
-            Prom["Prometheus"]
-            Graf["Grafana"]
-            Prom --> Graf
-        end
-
-        subgraph Nodes["Node Pools"]
-            N1["CPU Nodes"]
-            N2["GPU Nodes"]
-            N3["Tools Nodes"]
-        end
-    end
-
-    Runtime -->|LLM Response| B1
     N1 -.scheduling.-> Runtime
     N2 -.gpu workloads.-> Runtime
     N3 -.tools only.-> Prom
